@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="zh-CN" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>交互式计算器</title>
+    
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div class="container">
+    <div class="calculator">
+        <div class="controls">
+            <button onclick="toggleTheme()">切换主题</button>
+        </div>
+        <div class="display">
+            <div id="prev-op"></div>
+            <div id="current-op">0</div>
+        </div>
+        <div class="grid">
+            <button onclick="clearDisplay()">AC</button>
+            <button onclick="deleteDigit()">DEL</button>
+            <button class="op" onclick="appendOp('/')">÷</button>
+            <button class="op" onclick="appendOp('*')">×</button>
+            <button onclick="appendNum('7')">7</button>
+            <button onclick="appendNum('8')">8</button>
+            <button onclick="appendNum('9')">9</button>
+            <button class="op" onclick="appendOp('-')">-</button>
+            <button onclick="appendNum('4')">4</button>
+            <button onclick="appendNum('5')">5</button>
+            <button onclick="appendNum('6')">6</button>
+            <button class="op" onclick="appendOp('+')">+</button>
+            <button onclick="appendNum('1')">1</button>
+            <button onclick="appendNum('2')">2</button>
+            <button onclick="appendNum('3')">3</button>
+            <button class="equals" onclick="compute()">=</button>
+            <button onclick="appendNum('0')" style="grid-column: span 2;">0</button>
+            <button onclick="appendNum('.')">.</button>
+        </div>
+    </div>
+    <div class="history">
+        <h3>计算历史</h3>
+        <div id="history-list"></div>
+    </div>
+</div>
+
+<script>
+    let currentInput = '0';
+    let previousInput = '';
+    let operation = null;
+    const currentEl = document.getElementById('current-op');
+    const prevEl = document.getElementById('prev-op');
+    const historyEl = document.getElementById('history-list');
+
+    function updateDisplay() {
+        currentEl.innerText = currentInput;
+        prevEl.innerText = previousInput + (operation || '');
+    }
+
+    function appendNum(num) {
+        if (num === '.' && currentInput.includes('.')) return;
+        currentInput = currentInput === '0' ? num : currentInput + num;
+        updateDisplay();
+    }
+
+    function appendOp(op) {
+        if (operation !== null) compute();
+        previousInput = currentInput;
+        operation = op;
+        currentInput = '0';
+        updateDisplay();
+    }
+
+    function clearDisplay() {
+        currentInput = '0';
+        previousInput = '';
+        operation = null;
+        updateDisplay();
+    }
+
+    function deleteDigit() {
+        currentInput = currentInput.slice(0, -1) || '0';
+        updateDisplay();
+    }
+
+    function compute() {
+        let result;
+        const prev = parseFloat(previousInput);
+        const curr = parseFloat(currentInput);
+        if (isNaN(prev) || isNaN(curr)) return;
+
+        switch (operation) {
+            case '+': result = prev + curr; break;
+            case '-': result = prev - curr; break;
+            case '*': result = prev * curr; break;
+            case '/': result = curr !== 0 ? prev / curr : '错误'; break;
+            default: return;
+        }
+
+        const historyItem = document.createElement('div');
+        historyItem.className = 'history-item';
+        historyItem.innerText = `${previousInput} ${operation} ${currentInput} = ${result}`;
+        historyEl.prepend(historyItem);
+
+        currentInput = result.toString();
+        operation = null;
+        previousInput = '';
+        updateDisplay();
+    }
+
+    function toggleTheme() {
+        document.body.dataset.theme = document.body.dataset.theme === 'dark' ? 'light' : 'dark';
+    }
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key >= 0 && e.key <= 9) appendNum(e.key);
+        if (e.key === '.') appendNum('.');
+        if (e.key === 'Enter' || e.key === '=') compute();
+        if (e.key === 'Backspace') deleteDigit();
+        if (e.key === 'Escape') clearDisplay();
+        if (['+', '-', '*', '/'].includes(e.key)) appendOp(e.key);
+    });
+</script>
+</body>
+</html>
